@@ -464,21 +464,6 @@
   }
   .score b { color: var(--ink); }
 
-  .paper-foot {
-    margin: 24px 0 0;
-    padding-top: 16px;
-    border-top: 1px solid rgba(35,40,45,.16);
-    font-size: 13px;
-    line-height: 1.55;
-    color: #6a604d;
-  }
-  .paper-foot a {
-    font-weight: 600;
-    color: #8a5a1e;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-
   .credit {
     text-align: center;
     font-family: var(--font-plate);
@@ -575,7 +560,6 @@
           <span class="stamp">Desclasificado</span>
           <span class="score">Abierta en <b id="scoreN">0</b> intentos · <b id="scoreR"></b></span>
         </p>
-        <p class="paper-foot">Alguien te encerró esto adentro. <a id="crearOtro" href="#">Sella una para devolvérsela →</a></p>
       </article>
     </div>
     <p class="credit">Bóveda privada · 3 diales · 1000 combinaciones</p>
@@ -860,12 +844,6 @@
     $("probar").addEventListener("click", attempt);
     document.addEventListener("keydown", function (e) {
       if (e.key === "Enter" && !over) { e.preventDefault(); attempt(); }
-    });
-
-    $("crearOtro").addEventListener("click", function (e) {
-      e.preventDefault();
-      history.replaceState(null, "", location.pathname);
-      location.reload();
     });
   }
 
