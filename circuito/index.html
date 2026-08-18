@@ -790,7 +790,7 @@
     var nivel = 0, quemados = 0, caidas = 0;
     var puntos = [], pilares = [], trazos = [], activo = null, listo = false;
     var anillo = 0;
-    var restan = 0, cron = null;
+    var restan = 0, cron = null, finAt = 0, pausado = false;
 
     function cargar() {
       var L = NIVELES[nivel];
@@ -823,21 +823,40 @@
       $("cronoBarra").className = "crono-barra" + (restan <= 15 ? " urgente" : "");
     }
 
-    function arrancarReloj() {
+    /* el reloj se calcula contra la hora real: si el navegador frena los
+       temporizadores en segundo plano, igual marca lo que corresponde */
+    function correr() {
       pararReloj();
+      finAt = Date.now() + restan * 1000;
+      cron = setInterval(function () {
+        var antes = restan;
+        restan = Math.max(0, Math.ceil((finAt - Date.now()) / 1000));
+        if (restan === antes) return;
+        pintarReloj();
+        if (restan <= 5 && restan > 0) sTick();
+        if (restan === 0) seCorto();
+      }, 250);
+    }
+
+    function arrancarReloj() {
       restan = NIVELES[nivel].segundos;
       pintarReloj();
-      cron = setInterval(function () {
-        restan--;
-        if (restan <= 0) { restan = 0; pintarReloj(); seCorto(); return; }
-        pintarReloj();
-        if (restan <= 5) sTick();
-      }, 1000);
+      correr();
     }
 
     function pararReloj() {
       if (cron) { clearInterval(cron); cron = null; }
     }
+
+    /* si se van a otra app, el reloj espera */
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) {
+        if (cron) { restan = Math.max(0, Math.ceil((finAt - Date.now()) / 1000)); pararReloj(); pausado = true; }
+      } else if (pausado) {
+        pausado = false;
+        if (restan > 0 && $("overlay").hidden && !listo) correr();
+      }
+    });
 
     function seCorto() {
       pararReloj();
