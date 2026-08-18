@@ -887,7 +887,7 @@
       if (i < 0) return;
       if (parUnido(puntos[i].par)) return;
       e.preventDefault();
-      canvas.setPointerCapture(e.pointerId);
+      try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* puntero sintetico */ }
       var otro = -1;
       for (var k = 0; k < puntos.length; k++) {
         if (k !== i && puntos[k].par === puntos[i].par) otro = k;
