@@ -280,6 +280,38 @@
     color: var(--brass-hi);
   }
 
+  .crono-wrap {
+    margin: 16px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .crono-riel {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--steel-800);
+    overflow: hidden;
+    box-shadow: inset 0 1px 0 rgba(0,0,0,.6);
+  }
+  .crono-barra {
+    height: 100%;
+    width: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--brass-dim), var(--brass));
+    transition: width 1s linear, background .3s;
+  }
+  .crono-barra.urgente { background: linear-gradient(90deg, #6d2620, var(--oxblood)); }
+  .crono {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    color: var(--brass);
+    min-width: 42px;
+    text-align: right;
+  }
+  .crono.urgente { color: #d08d84; }
+
   .board-bar {
     margin: 14px 0 0;
     display: flex;
@@ -417,7 +449,7 @@
   <section id="crear" class="panel" hidden>
     <p class="eyebrow">Depósito de seguridad</p>
     <h1 class="plate-title">Bóveda Nº 3</h1>
-    <p class="lede">Encierra una frase adentro y manda el link. Para leerla hay que reparar un circuito de dos niveles y después acertar un acertijo de geografía chilena.</p>
+    <p class="lede">Encierra una frase adentro y manda el link. Para leerla hay que reparar un circuito de dos niveles contra reloj y después acertar un acertijo de geografía chilena.</p>
 
     <hr class="rule">
 
@@ -466,15 +498,20 @@
 
         <!-- acto 1 -->
         <div id="acto1">
-          <p class="lede">Los cables del mismo color están sueltos. Únelos arrastrando el dedo de uno a otro, sin soltar, sin salirte del círculo y sin cruzar ningún cable. Casi ninguno se une en línea recta: hay que rodear.</p>
+          <p class="lede">Los bornes están soldados al borde del círculo. Une los del mismo color arrastrando el dedo sin soltar. El cable ocupa espacio real: no puede rozar otro cable, ni un remache, ni la pared. Y hay reloj.</p>
 
           <div class="screen" id="screen">
             <canvas id="lienzo"></canvas>
             <div class="overlay" id="overlay">
               <span class="big" id="ovTitle">Circuito</span>
-              <p id="ovText">Arrastra de un punto al otro del mismo color. Si un cable se cruza con otro, se quema.</p>
+              <p id="ovText">Arrastra de un borne al otro del mismo color. Si el cable roza algo, se quema. Tienes 1:30.</p>
               <button class="btn" id="ovBtn" type="button">Empezar</button>
             </div>
+          </div>
+
+          <div class="crono-wrap">
+            <span class="crono-riel"><span class="crono-barra" id="cronoBarra"></span></span>
+            <span class="crono" id="crono">1:30</span>
           </div>
 
           <div class="board-bar">
@@ -484,7 +521,7 @@
               <button class="btn btn-ghost btn-small" id="reiniciar" type="button">Reiniciar</button>
             </span>
           </div>
-          <p class="say" id="say">Empieza por el par que tengas más despejado.</p>
+          <p class="say" id="say">Los cables cortos primero. Los largos necesitan el centro.</p>
         </div>
 
         <!-- acto 2 -->
@@ -512,11 +549,11 @@
         <p class="message" id="mensaje"></p>
         <p class="verdict-line">
           <span class="stamp">Desclasificado</span>
-          <span class="score"><b id="scoreQ">0</b> cables quemados · acertijo en <b id="scoreN">0</b> intentos · <b id="scoreR"></b></span>
+          <span class="score"><b id="scoreQ">0</b> cables quemados · <b id="scoreC">0</b> cortes de luz · acertijo en <b id="scoreN">0</b> intentos · <b id="scoreR"></b></span>
         </p>
       </article>
     </div>
-    <p class="credit">Bóveda privada · 2 niveles · 1 acertijo</p>
+    <p class="credit">Bóveda privada · 2 niveles contra reloj · 1 acertijo</p>
   </section>
 
 </main>
@@ -668,6 +705,9 @@
     { hex: "#2fb8c6", marca: "barra" }
   ];
 
+  var CX = 0.5, CY = 0.5, RAD = 0.468, LINEA = 0.026, GROSOR = 0.031;
+  var DOT = 0.046;
+
   function pol(grados, radio) {
     var r = grados * Math.PI / 180;
     return [0.5 + radio * Math.cos(r), 0.5 - radio * Math.sin(r)];
@@ -676,51 +716,70 @@
   var NIVELES = [
     {
       titulo: "Nivel uno",
-      texto: "Cuatro pares, y casi todos se estorban. El camino corto casi nunca sirve.",
-      anillo: 0.335,
-      dot: 0.047,
+      texto: "Los bornes están soldados al borde: no se puede pasar entre uno y la pared. El cable ocupa espacio, así que el primero que trazas le quita sitio al siguiente.",
+      dot: 0.046,
+      segundos: 90,
       pares: [
-        { c: 0, aa: 0,   ab: 90 },
-        { c: 1, aa: 45,  ab: 180 },
-        { c: 2, aa: 135, ab: 270 },
-        { c: 3, aa: 225, ab: 315 }
+        { c: 0, aa: 0,   ab: 180 },
+        { c: 1, aa: 36,  ab: 144 },
+        { c: 2, aa: 72,  ab: 108 },
+        { c: 3, aa: 216, ab: 324 },
+        { c: 4, aa: 252, ab: 288 }
+      ],
+      pilares: [
+        { x: 0.50, y: 0.50, r: 0.085 }
       ]
     },
     {
       titulo: "Nivel dos",
-      texto: "Seis pares. Decide cuáles pasan por dentro y cuáles por la orilla, o te quedas sin espacio.",
-      anillo: 0.355,
-      dot: 0.042,
+      texto: "Seis pares y tres remaches en medio. Traza primero los cables cortos o te quedas sin corredor para los largos.",
+      dot: 0.040,
+      segundos: 150,
       pares: [
-        { c: 1, aa: 30,  ab: 60 },
-        { c: 2, aa: 90,  ab: 150 },
-        { c: 4, aa: 180, ab: 240 },
-        { c: 0, aa: 0,   ab: 270 },
-        { c: 3, aa: 120, ab: 330 },
-        { c: 5, aa: 210, ab: 300 }
+        { c: 0, aa: 0,   ab: 150 },
+        { c: 1, aa: 30,  ab: 120 },
+        { c: 2, aa: 60,  ab: 90 },
+        { c: 3, aa: 180, ab: 330 },
+        { c: 4, aa: 210, ab: 300 },
+        { c: 5, aa: 240, ab: 270 }
+      ],
+      pilares: [
+        { x: 0.50, y: 0.50, r: 0.070 },
+        { x: 0.50, y: 0.285, r: 0.045 },
+        { x: 0.50, y: 0.715, r: 0.045 }
       ]
     }
   ];
 
-  var CX = 0.5, CY = 0.5, RAD = 0.468, LINEA = 0.023;
-  var DOT = 0.047;
-
-  function seg(p1, p2, p3, p4) {
-    function o(a, b, c) {
-      var v = (b.y - a.y) * (c.x - b.x) - (b.x - a.x) * (c.y - b.y);
-      return v > 1e-9 ? 1 : (v < -1e-9 ? -1 : 0);
-    }
-    var o1 = o(p1, p2, p3), o2 = o(p1, p2, p4), o3 = o(p3, p4, p1), o4 = o(p3, p4, p2);
-    return o1 !== o2 && o3 !== o4;
+  function orient(a, b, c) {
+    var v = (b.y - a.y) * (c.x - b.x) - (b.x - a.x) * (c.y - b.y);
+    return v > 1e-12 ? 1 : (v < -1e-12 ? -1 : 0);
   }
 
-  function distSeg(p, a, b) {
+  function cruzan(p1, p2, p3, p4) {
+    return orient(p1, p2, p3) !== orient(p1, p2, p4) &&
+           orient(p3, p4, p1) !== orient(p3, p4, p2);
+  }
+
+  function distPuntoSeg(p, a, b) {
     var dx = b.x - a.x, dy = b.y - a.y;
     var L = dx * dx + dy * dy;
     var t = L === 0 ? 0 : ((p.x - a.x) * dx + (p.y - a.y) * dy) / L;
     t = Math.max(0, Math.min(1, t));
-    var qx = a.x + t * dx, qy = a.y + t * dy;
-    return Math.hypot(p.x - qx, p.y - qy);
+    return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+  }
+
+  function distSegSeg(a, b, c, d) {
+    if (cruzan(a, b, c, d)) return 0;
+    return Math.min(
+      distPuntoSeg(a, c, d), distPuntoSeg(b, c, d),
+      distPuntoSeg(c, a, b), distPuntoSeg(d, a, b)
+    );
+  }
+
+  function reloj(seg) {
+    var m = Math.floor(seg / 60), s = seg % 60;
+    return m + ":" + (s < 10 ? "0" : "") + s;
   }
 
   function setupCircuito(onDone) {
@@ -728,17 +787,21 @@
     var ctx = canvas.getContext("2d");
     var size = 1, dpr = 1;
 
-    var nivel = 0, quemados = 0;
-    var puntos = [], trazos = [], activo = null, listo = false;
+    var nivel = 0, quemados = 0, caidas = 0;
+    var puntos = [], pilares = [], trazos = [], activo = null, listo = false;
+    var anillo = 0;
+    var restan = 0, cron = null;
 
     function cargar() {
       var L = NIVELES[nivel];
+      DOT = L.dot;
+      anillo = RAD - DOT * 0.55;
       puntos = [];
       trazos = [];
       activo = null;
-      DOT = L.dot;
+      pilares = L.pilares || [];
       L.pares.forEach(function (p, i) {
-        var a = pol(p.aa, L.anillo), b = pol(p.ab, L.anillo);
+        var a = pol(p.aa, anillo), b = pol(p.ab, anillo);
         puntos.push({ x: a[0], y: a[1], c: p.c, par: i });
         puntos.push({ x: b[0], y: b[1], c: p.c, par: i });
       });
@@ -746,7 +809,46 @@
       $("total").textContent = String(L.pares.length);
       $("unidos").textContent = "0";
       $("say").textContent = L.texto;
+      pintarReloj();
       dibujar();
+    }
+
+    /* --- cronómetro --- */
+
+    function pintarReloj() {
+      var tope = NIVELES[nivel].segundos;
+      $("crono").textContent = reloj(restan);
+      $("crono").className = "crono" + (restan <= 15 ? " urgente" : "");
+      $("cronoBarra").style.width = Math.max(0, (restan / tope) * 100) + "%";
+      $("cronoBarra").className = "crono-barra" + (restan <= 15 ? " urgente" : "");
+    }
+
+    function arrancarReloj() {
+      pararReloj();
+      restan = NIVELES[nivel].segundos;
+      pintarReloj();
+      cron = setInterval(function () {
+        restan--;
+        if (restan <= 0) { restan = 0; pintarReloj(); seCorto(); return; }
+        pintarReloj();
+        if (restan <= 5) sTick();
+      }, 1000);
+    }
+
+    function pararReloj() {
+      if (cron) { clearInterval(cron); cron = null; }
+    }
+
+    function seCorto() {
+      pararReloj();
+      caidas++;
+      activo = null;
+      sBurn();
+      cargar();
+      $("ovTitle").textContent = "Se cortó la energía";
+      $("ovText").textContent = "Se acabó el tiempo y el nivel volvió a cero. Esta vez traza primero los cables cortos.";
+      $("ovBtn").textContent = "Otra vez";
+      $("overlay").hidden = false;
     }
 
     function unidos() { return trazos.length; }
@@ -768,7 +870,7 @@
 
     function P(p) { return { x: p.x * size, y: p.y * size }; }
 
-    function marca(ctx, tipo, x, y, r) {
+    function marca(tipo, x, y, r) {
       ctx.fillStyle = "rgba(10,14,18,.42)";
       ctx.beginPath();
       if (tipo === "circulo") {
@@ -820,11 +922,26 @@
       ctx.fillStyle = "#0b0f13";
       ctx.fillRect(0, 0, size, size);
 
-      ctx.strokeStyle = "rgba(193,154,68,.42)";
-      ctx.lineWidth = Math.max(1.5, size * 0.006);
+      ctx.strokeStyle = "rgba(193,154,68,.5)";
+      ctx.lineWidth = Math.max(2, size * 0.009);
       ctx.beginPath();
       ctx.arc(CX * size, CY * size, RAD * size, 0, Math.PI * 2);
       ctx.stroke();
+
+      pilares.forEach(function (q) {
+        var r = q.r * size;
+        var g = ctx.createRadialGradient(q.x * size - r * 0.3, q.y * size - r * 0.35, r * 0.1, q.x * size, q.y * size, r);
+        g.addColorStop(0, "#5a6874");
+        g.addColorStop(0.6, "#33404a");
+        g.addColorStop(1, "#1b232a");
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(q.x * size, q.y * size, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(193,154,68,.28)";
+        ctx.lineWidth = Math.max(1, size * 0.004);
+        ctx.stroke();
+      });
 
       trazos.forEach(function (t) { trazar(t.pts, COLORES[t.c].hex, 1); });
       if (activo) trazar(activo.pts, COLORES[activo.c].hex, 0.75);
@@ -833,55 +950,50 @@
         var p = P(d), r = DOT * size;
         var hecho = parUnido(d.par);
         ctx.save();
-        if (hecho) {
-          ctx.shadowColor = COLORES[d.c].hex;
-          ctx.shadowBlur = r * 0.9;
-        }
+        if (hecho) { ctx.shadowColor = COLORES[d.c].hex; ctx.shadowBlur = r * 0.9; }
         ctx.fillStyle = COLORES[d.c].hex;
         ctx.beginPath();
         ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
-        marca(ctx, COLORES[d.c].marca, p.x, p.y, r * 0.32);
+        marca(COLORES[d.c].marca, p.x, p.y, r * 0.32);
       });
     }
 
-    /* --- validación --- */
+    /* --- validación con grosor real --- */
 
-    function fueraDelCirculo(p) {
-      return Math.hypot(p.x - CX, p.y - CY) > RAD;
-    }
+    function revisar(a, b) {
+      if (Math.hypot(b.x - CX, b.y - CY) > RAD - GROSOR * 0.5) return "Tocaste la pared del círculo.";
 
-    function chocaConTrazos(a, b) {
+      for (var q = 0; q < pilares.length; q++) {
+        if (distPuntoSeg(pilares[q], a, b) < pilares[q].r + GROSOR * 0.5) return "Chocaste con un remache.";
+      }
+
+      for (var i = 0; i < puntos.length; i++) {
+        if (i === activo.desde || i === activo.hasta) continue;
+        if (distPuntoSeg(puntos[i], a, b) < DOT + GROSOR * 0.5) return "Pasaste demasiado cerca de otro borne.";
+      }
+
       for (var t = 0; t < trazos.length; t++) {
         var pts = trazos[t].pts;
-        for (var i = 0; i < pts.length - 1; i++) {
-          if (seg(a, b, pts[i], pts[i + 1])) return true;
+        for (var k = 0; k < pts.length - 1; k++) {
+          if (distSegSeg(a, b, pts[k], pts[k + 1]) < GROSOR) return "No cabe: el cable roza otro.";
         }
       }
-      return false;
-    }
 
-    function chocaConsigo(a, b, pts) {
-      for (var i = 0; i < pts.length - 2; i++) {
-        if (seg(a, b, pts[i], pts[i + 1])) return true;
+      var mine = activo.pts;
+      for (var m = 0; m < mine.length - 3; m++) {
+        if (distSegSeg(a, b, mine[m], mine[m + 1]) < GROSOR) return "El cable se rozó consigo mismo.";
       }
-      return false;
-    }
 
-    function pisaUnPunto(a, b, permitidos) {
-      for (var i = 0; i < puntos.length; i++) {
-        if (permitidos.indexOf(i) >= 0) continue;
-        if (distSeg(puntos[i], a, b) < DOT * 0.92) return true;
-      }
-      return false;
+      return null;
     }
 
     function quemar(motivo) {
       quemados++;
       activo = null;
       sBurn();
-      $("say").textContent = motivo;
+      $("say").textContent = motivo + " Ese cable se quemó.";
       var d = $("door");
       d.classList.remove("shake");
       void d.offsetWidth;
@@ -896,7 +1008,7 @@
       return { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height };
     }
 
-    function agarre() { return Math.max(DOT * 1.35, 0.072); }
+    function agarre() { return Math.max(DOT * 1.4, 0.072); }
 
     function indiceCerca(p) {
       var mejor = -1, dm = agarre();
@@ -911,8 +1023,7 @@
       if (listo || !$("overlay").hidden) return;
       var p = pos(e);
       var i = indiceCerca(p);
-      if (i < 0) return;
-      if (parUnido(puntos[i].par)) return;
+      if (i < 0 || parUnido(puntos[i].par)) return;
       e.preventDefault();
       try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* puntero sintetico */ }
       var otro = -1;
@@ -929,13 +1040,9 @@
       e.preventDefault();
       var p = pos(e);
       var last = activo.pts[activo.pts.length - 1];
-      if (Math.hypot(p.x - last.x, p.y - last.y) < 0.012) return;
-
-      if (fueraDelCirculo(p)) { quemar("Te saliste del círculo. Ese cable se quemó."); return; }
-      if (chocaConTrazos(last, p)) { quemar("Cruzaste otro cable. Se quemó."); return; }
-      if (chocaConsigo(last, p, activo.pts)) { quemar("El cable se cruzó consigo mismo."); return; }
-      if (pisaUnPunto(last, p, [activo.desde, activo.hasta])) { quemar("Pasaste por encima de otro punto."); return; }
-
+      if (Math.hypot(p.x - last.x, p.y - last.y) < 0.011) return;
+      var falla = revisar(last, p);
+      if (falla) { quemar(falla); return; }
       activo.pts.push(p);
       dibujar();
     });
@@ -958,7 +1065,7 @@
       } else {
         activo = null;
         sMiss();
-        $("say").textContent = "Suelta justo encima del punto del mismo color.";
+        $("say").textContent = "Suelta justo encima del borne del mismo color.";
         dibujar();
       }
     }
@@ -968,25 +1075,25 @@
 
     function terminarNivel() {
       listo = true;
+      pararReloj();
       sClunk();
       if (nivel < NIVELES.length - 1) {
         setTimeout(function () {
           nivel++;
           listo = false;
+          cargar();
           $("ovTitle").textContent = NIVELES[nivel].titulo;
           $("ovText").textContent = NIVELES[nivel].texto;
           $("ovBtn").textContent = "Seguir";
           $("overlay").hidden = false;
-          cargar();
         }, 700);
       } else {
-        setTimeout(function () { onDone(quemados); }, 700);
+        setTimeout(function () { onDone(quemados, caidas); }, 700);
       }
     }
 
     $("deshacer").addEventListener("click", function () {
-      if (listo) return;
-      if (!trazos.length) return;
+      if (listo || !trazos.length) return;
       trazos.pop();
       activo = null;
       $("unidos").textContent = String(unidos());
@@ -998,17 +1105,19 @@
     $("reiniciar").addEventListener("click", function () {
       if (listo) return;
       cargar();
-      $("say").textContent = "Nivel limpio otra vez.";
+      $("say").textContent = "Nivel limpio otra vez. El reloj sigue corriendo.";
       sTick();
     });
 
     $("ovBtn").addEventListener("click", function () {
       $("overlay").hidden = true;
       sTick();
+      arrancarReloj();
     });
 
     window.addEventListener("resize", resize);
 
+    restan = NIVELES[0].segundos;
     cargar();
     resize();
   }
@@ -1070,7 +1179,7 @@
     return "casi se la regalo";
   }
 
-  function setupAcertijo(seed, quemados) {
+  function setupAcertijo(seed, quemados, caidas) {
     var idx = hashOf("acertijo:" + seed) % ACERTIJOS.length;
     var A = ACERTIJOS[idx];
     var intentos = 0;
@@ -1082,6 +1191,7 @@
     function open() {
       sBoom();
       $("scoreQ").textContent = String(quemados);
+      $("scoreC").textContent = String(caidas);
       $("scoreN").textContent = String(intentos);
       $("scoreR").textContent = rango(intentos);
       $("door").classList.add("open");
@@ -1146,12 +1256,12 @@
 
     var seed = JSON.stringify(data);
 
-    setupCircuito(function (quemados) {
+    setupCircuito(function (quemados, caidas) {
       $("acto1").hidden = true;
       $("acto2").hidden = false;
       $("acto2").classList.add("act");
       $("acto").textContent = "Acto dos · Acertijo";
-      setupAcertijo(seed, quemados);
+      setupAcertijo(seed, quemados, caidas);
     });
   }
 
