@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Caja Fuerte Nº 7</title>
+<meta name="description" content="Una frase encerrada en una caja fuerte. Descifra la combinación para leerla.">
+<meta property="og:title" content="Caja Fuerte Nº 7">
+<meta property="og:description" content="Alguien encerró un mensaje aquí adentro. Descifra la combinación.">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+
+  :root {
+    --steel-950: #0e1216;
+    --steel-900: #151b21;
+    --steel-850: #1a2128;
+    --steel-800: #212a32;
+    --steel-700: #2d3841;
+    --steel-600: #3d4a55;
+    --steel-500: #55646f;
+    --steel-400: #6f8090;
+    --steel-300: #93a3b1;
+    --brass: #c19a44;
+    --brass-hi: #f2dda3;
+    --brass-dim: #6d5726;
+    --oxblood: #8a3128;
+    --paper: #ece3d0;
+    --paper-2: #ded3bb;
+    --ink: #23282d;
+
+    --font-plate: Copperplate, "Copperplate Gothic Light", "Big Caslon", Palatino, Georgia, serif;
+    --font-body: "Avenir Next", Avenir, "Gill Sans", "Segoe UI", system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace;
+
+    color-scheme: dark;
+  }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    overflow-x: hidden;
+    min-height: 100vh;
+    background:
+      radial-gradient(120% 90% at 50% -10%, #23303a 0%, transparent 60%),
+      radial-gradient(100% 70% at 50% 110%, #1b2229 0%, transparent 55%),
+      var(--steel-950);
+    color: var(--steel-300);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 18px 44px;
+  }
+
+  #app {
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  [hidden] { display: none !important; }
+
+  /* ---------- chapa ---------- */
+
+  .panel {
+    position: relative;
+    border-radius: 10px;
+    background: linear-gradient(180deg, var(--steel-800) 0%, var(--steel-850) 45%, var(--steel-900) 100%);
+    border: 1px solid var(--steel-700);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.07),
+      inset 0 -1px 0 rgba(0,0,0,.5),
+      0 26px 60px -24px rgba(0,0,0,.9);
+    padding: 30px 28px 32px;
+  }
+
+  .panel::before,
+  .panel::after {
+    content: "";
+    position: absolute;
+    inset: 9px;
+    border-radius: 4px;
+    pointer-events: none;
+  }
+  .panel::before { border: 1px solid rgba(193,154,68,.16); }
+  .panel::after {
+    background:
+      radial-gradient(circle at 6px 6px, var(--brass-dim) 0 2.2px, transparent 2.6px),
+      radial-gradient(circle at calc(100% - 6px) 6px, var(--brass-dim) 0 2.2px, transparent 2.6px),
+      radial-gradient(circle at 6px calc(100% - 6px), var(--brass-dim) 0 2.2px, transparent 2.6px),
+      radial-gradient(circle at calc(100% - 6px) calc(100% - 6px), var(--brass-dim) 0 2.2px, transparent 2.6px);
+  }
+
+  .eyebrow {
+    font-family: var(--font-plate);
+    font-size: 11px;
+    letter-spacing: .28em;
+    text-transform: uppercase;
+    color: var(--brass);
+    margin: 0;
+  }
+
+  .plate-title {
+    font-family: var(--font-plate);
+    font-size: clamp(25px, 6.6vw, 37px);
+    line-height: 1.05;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--brass-hi);
+    margin: 6px 0 0;
+    text-wrap: balance;
+    text-shadow: 0 1px 0 rgba(0,0,0,.7), 0 0 22px rgba(193,154,68,.16);
+  }
+
+  .lede {
+    margin: 12px 0 0;
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--steel-400);
+    max-width: 48ch;
+  }
+
+  hr.rule {
+    border: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--steel-700) 15%, var(--steel-700) 85%, transparent);
+    margin: 24px 0;
+  }
+
+  /* ---------- formulario ---------- */
+
+  .form { display: flex; flex-direction: column; gap: 18px; }
+  .field { display: flex; flex-direction: column; gap: 7px; }
+
+  .field label {
+    font-family: var(--font-plate);
+    font-size: 10.5px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--steel-400);
+  }
+
+  .input {
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--paper);
+    background: var(--steel-950);
+    border: 1px solid var(--steel-700);
+    border-radius: 5px;
+    padding: 11px 13px;
+    width: 100%;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .input::placeholder { color: #56636e; }
+  .input:focus-visible {
+    outline: none;
+    border-color: var(--brass);
+    box-shadow: 0 0 0 3px rgba(193,154,68,.18);
+  }
+  textarea.input { resize: vertical; min-height: 92px; }
+
+  .btn {
+    font-family: var(--font-plate);
+    font-size: 12px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--steel-950);
+    background: linear-gradient(180deg, var(--brass-hi), var(--brass) 55%, #9a7a32);
+    border: 1px solid #7d6228;
+    border-radius: 5px;
+    padding: 13px 20px;
+    cursor: pointer;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 6px 18px -8px rgba(193,154,68,.7);
+    transition: transform .12s, filter .15s;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:active { transform: translateY(1px); }
+  .btn:focus-visible { outline: 2px solid var(--brass-hi); outline-offset: 3px; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--brass);
+    border: 1px solid var(--steel-600);
+    box-shadow: none;
+  }
+  .btn-ghost:hover { border-color: var(--brass-dim); background: rgba(193,154,68,.06); }
+
+  .result { display: flex; flex-direction: column; gap: 10px; }
+
+  .link-row { display: flex; gap: 8px; align-items: stretch; }
+  .link-row .input { font-family: var(--font-mono); font-size: 12.5px; color: var(--brass-hi); }
+  .link-row .btn { white-space: nowrap; padding: 0 16px; }
+
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  .note { font-size: 12.5px; line-height: 1.55; color: #5f6d79; margin: 0; }
+
+  /* ---------- escena de la bóveda ---------- */
+
+  .stage { display: grid; perspective: 1400px; }
+  .stage > * { grid-area: 1 / 1; }
+
+  .door {
+    transform-origin: left center;
+    transform-style: preserve-3d;
+    transition: transform 1.15s cubic-bezier(.6,.02,.25,1), box-shadow 1.15s, filter 1.15s;
+    z-index: 2;
+  }
+  .door.open {
+    transform: translateX(-2%) rotateY(-108deg);
+    filter: brightness(.42) saturate(.7);
+    box-shadow: 30px 30px 70px -20px rgba(0,0,0,.95);
+  }
+
+  .shake { animation: shake .32s ease-out; }
+  @keyframes shake {
+    0%,100% { translate: 0 0; }
+    22% { translate: -3px 1px; }
+    48% { translate: 3px -1px; }
+    74% { translate: -1.5px 0; }
+  }
+
+  .to-line {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    letter-spacing: .04em;
+    color: var(--steel-400);
+    margin: 14px 0 0;
+  }
+  .to-line b { color: var(--paper); font-weight: 600; }
+
+  /* ---------- diales ---------- */
+
+  .dials {
+    display: flex;
+    justify-content: center;
+    gap: clamp(10px, 4.5vw, 26px);
+    margin: 26px 0 0;
+  }
+
+  .dial-slot { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+
+  .nudge {
+    width: 34px;
+    height: 22px;
+    border: 1px solid var(--steel-600);
+    background: var(--steel-800);
+    color: var(--brass);
+    border-radius: 4px;
+    font-size: 11px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background .15s, border-color .15s, opacity .2s;
+  }
+  .nudge:hover { background: var(--steel-700); border-color: var(--brass-dim); }
+  .nudge:focus-visible { outline: 2px solid var(--brass-hi); outline-offset: 2px; }
+
+  .dial {
+    position: relative;
+    width: clamp(82px, 24vw, 112px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    background: radial-gradient(circle at 34% 28%, #4a5762 0%, #303c46 38%, #1c242b 72%, #141a20 100%);
+    box-shadow:
+      inset 0 2px 3px rgba(255,255,255,.14),
+      inset 0 -3px 6px rgba(0,0,0,.7),
+      0 10px 22px -10px rgba(0,0,0,.9);
+    transition: box-shadow .25s;
+  }
+  .dial:focus-visible { outline: 2px solid var(--brass-hi); outline-offset: 4px; }
+
+  .ticks {
+    position: absolute;
+    inset: 5px;
+    border-radius: 50%;
+    background: repeating-conic-gradient(var(--brass-dim) 0deg 1.1deg, transparent 1.1deg 9deg);
+    -webkit-mask: radial-gradient(circle, transparent 0 66%, #000 68% 100%);
+    mask: radial-gradient(circle, transparent 0 66%, #000 68% 100%);
+    transition: transform .3s cubic-bezier(.34,1.25,.5,1);
+  }
+
+  .num {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-mono);
+    font-size: clamp(25px, 7.6vw, 34px);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--steel-300);
+    text-shadow: 0 1px 0 rgba(0,0,0,.8);
+    transition: color .25s;
+  }
+
+  .dial-slot.done .dial {
+    cursor: default;
+    box-shadow:
+      inset 0 2px 3px rgba(255,255,255,.2),
+      inset 0 -3px 6px rgba(0,0,0,.6),
+      0 0 0 2px var(--brass),
+      0 0 26px -4px rgba(193,154,68,.55);
+  }
+  .dial-slot.done .num { color: var(--brass-hi); text-shadow: 0 0 14px rgba(242,221,163,.5); }
+  .dial-slot.done .ticks { background: repeating-conic-gradient(var(--brass) 0deg 1.1deg, transparent 1.1deg 9deg); }
+  .dial-slot.done .nudge { opacity: 0; pointer-events: none; }
+
+  .verdict {
+    height: 18px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: .04em;
+    color: var(--steel-500);
+    display: grid;
+    place-items: center;
+  }
+  .verdict.up, .verdict.down { color: var(--steel-300); }
+  .verdict.ok { color: var(--brass); }
+
+  /* ---------- consola ---------- */
+
+  .console { margin: 24px 0 0; display: flex; flex-direction: column; gap: 14px; }
+
+  .try-row { display: flex; align-items: center; gap: 14px; }
+  .try-row .btn { flex: 1; }
+
+  .tally {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: .05em;
+    color: var(--steel-400);
+    white-space: nowrap;
+  }
+  .tally b { color: var(--brass); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  .say {
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--steel-500);
+    margin: 0;
+    min-height: 20px;
+    font-style: italic;
+  }
+
+  .ledger {
+    border-top: 1px solid var(--steel-700);
+    padding-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 168px;
+    overflow-y: auto;
+  }
+  .ledger:empty { display: none; }
+
+  .entry {
+    display: grid;
+    grid-template-columns: 26px repeat(3, 1fr);
+    gap: 6px;
+    align-items: center;
+    animation: slide .28s ease-out;
+  }
+  @keyframes slide { from { opacity: 0; transform: translateY(-5px); } }
+
+  .entry .n {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--steel-600);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 5px 0;
+    border-radius: 4px;
+    background: var(--steel-950);
+    border: 1px solid var(--steel-700);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    color: var(--steel-400);
+  }
+  .cell.ok {
+    color: var(--brass-hi);
+    border-color: var(--brass-dim);
+    background: rgba(193,154,68,.1);
+  }
+  .cell .mark { font-size: 11px; opacity: .85; }
+
+  /* ---------- papel ---------- */
+
+  .paper {
+    position: relative;
+    z-index: 1;
+    border-radius: 8px;
+    background: linear-gradient(160deg, var(--paper) 0%, var(--paper-2) 100%);
+    color: var(--ink);
+    padding: 40px 34px 34px;
+    box-shadow: inset 0 0 60px rgba(120,100,60,.16), 0 20px 50px -26px rgba(0,0,0,.9);
+    opacity: 0;
+    transition: opacity .5s .55s;
+  }
+  .paper.shown { opacity: 1; }
+  .paper .eyebrow { color: #8a6f2d; }
+
+  .paper-to {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: #6a604d;
+    margin: 4px 0 20px;
+  }
+  .paper-to b { color: var(--ink); }
+
+  .message {
+    font-family: var(--font-plate);
+    font-size: clamp(20px, 5.2vw, 28px);
+    line-height: 1.32;
+    color: var(--ink);
+    margin: 0;
+    text-wrap: balance;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .verdict-line {
+    margin: 24px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .stamp {
+    display: inline-block;
+    font-family: var(--font-plate);
+    font-size: 12px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--oxblood);
+    border: 2px solid var(--oxblood);
+    border-radius: 3px;
+    padding: 7px 14px;
+    rotate: -4deg;
+    opacity: .82;
+  }
+
+  .score {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: #6a604d;
+  }
+  .score b { color: var(--ink); }
+
+  .paper-foot {
+    margin: 24px 0 0;
+    padding-top: 16px;
+    border-top: 1px solid rgba(35,40,45,.16);
+    font-size: 13px;
+    line-height: 1.55;
+    color: #6a604d;
+  }
+  .paper-foot a {
+    font-weight: 600;
+    color: #8a5a1e;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .credit {
+    text-align: center;
+    font-family: var(--font-plate);
+    font-size: 10px;
+    letter-spacing: .24em;
+    text-transform: uppercase;
+    color: #3d4952;
+    margin: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .door, .ticks, .paper { transition-duration: .01ms; }
+    .shake, .entry { animation: none; }
+  }
+
+  @media (max-width: 420px) {
+    .panel { padding: 24px 16px 26px; }
+    .paper { padding: 32px 20px 26px; }
+    .link-row { flex-direction: column; }
+    .try-row { flex-direction: column; align-items: stretch; gap: 10px; }
+    .tally { text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<main id="app">
+
+  <!-- ============ CREAR ============ -->
+  <section id="crear" class="panel" hidden>
+    <p class="eyebrow">Depósito de seguridad</p>
+    <h1 class="plate-title">Caja Fuerte Nº 7</h1>
+    <p class="lede">Encierra una frase adentro y manda el link. Quien lo reciba tendrá que descifrar la combinación para leerla.</p>
+
+    <hr class="rule">
+
+    <div class="form">
+      <div class="field">
+        <label for="nombre">Para quién es</label>
+        <input id="nombre" class="input" type="text" maxlength="40" placeholder="Camila" autocomplete="off">
+      </div>
+
+      <div class="field">
+        <label for="frase">Frase que se desbloquea</label>
+        <textarea id="frase" class="input" maxlength="240" placeholder="El café de la reunión lo pagas tú. Ya está firmado."></textarea>
+      </div>
+
+      <div>
+        <button id="generar" class="btn" type="button">Sellar la caja</button>
+      </div>
+
+      <div id="resultado" class="result" hidden>
+        <div class="field">
+          <label for="link">Link para enviar</label>
+          <div class="link-row">
+            <input id="link" class="input" type="text" readonly>
+            <button id="copiar" class="btn" type="button">Copiar</button>
+          </div>
+        </div>
+        <div class="actions">
+          <button id="probar-link" class="btn btn-ghost" type="button">Probarlo</button>
+        </div>
+        <p class="note">La frase viaja dentro del propio link. No se guarda en ningún servidor.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ JUEGO ============ -->
+  <section id="juego" hidden>
+    <div class="stage">
+      <div id="door" class="panel door">
+        <p class="eyebrow">Contenido clasificado</p>
+        <h1 class="plate-title">Caja Fuerte Nº 7</h1>
+        <p class="to-line">Destinatario: <b id="destino">—</b></p>
+        <p class="lede">Marca tres dígitos y prueba. La caja te dirá, dial por dial, si el número va <b>más alto</b>, <b>más bajo</b> o si es el correcto.</p>
+
+        <div class="dials" id="dials"></div>
+
+        <div class="console">
+          <div class="try-row">
+            <button id="probar" class="btn" type="button">Probar combinación</button>
+            <span class="tally"><b id="count">0</b> intentos</span>
+          </div>
+          <p class="say" id="say">Mil combinaciones. Con cabeza, cuatro intentos bastan.</p>
+          <div class="ledger" id="ledger"></div>
+        </div>
+      </div>
+
+      <article id="paper" class="paper">
+        <p class="eyebrow">Acta de apertura</p>
+        <p class="paper-to">Entregado a <b id="paperName">—</b></p>
+        <p class="message" id="mensaje"></p>
+        <p class="verdict-line">
+          <span class="stamp">Desclasificado</span>
+          <span class="score">Abierta en <b id="scoreN">0</b> intentos · <b id="scoreR"></b></span>
+        </p>
+        <p class="paper-foot">Alguien te encerró esto adentro. <a id="crearOtro" href="#">Sella una para devolvérsela →</a></p>
+      </article>
+    </div>
+    <p class="credit">Bóveda privada · 3 diales · 1000 combinaciones</p>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ---------- carga útil en el hash ---------- */
+
+  function encode(obj) {
+    var bytes = new TextEncoder().encode(JSON.stringify(obj));
+    var bin = "";
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+
+  function decode(str) {
+    var s = str.replace(/-/g, "+").replace(/_/g, "/");
+    while (s.length % 4) s += "=";
+    var bin = atob(s);
+    var bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return JSON.parse(new TextDecoder().decode(bytes));
+  }
+
+  /* combinación derivada del contenido: nadie la elige, pero no cambia al recargar */
+  function combo(seed) {
+    var h = 2166136261;
+    for (var i = 0; i < seed.length; i++) {
+      h ^= seed.charCodeAt(i);
+      h = Math.imul(h, 16777619) >>> 0;
+    }
+    var out = [];
+    for (var d = 0; d < 3; d++) {
+      h = Math.imul(h ^ (d + 1), 16777619) >>> 0;
+      out.push((h >>> 8) % 10);
+    }
+    return out;
+  }
+
+  /* ---------- sonido sintetizado ---------- */
+
+  var ac = null;
+  function tone(freq, dur, type, gain) {
+    try {
+      if (!ac) {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        ac = new AC();
+      }
+      if (ac.state === "suspended") ac.resume();
+      var o = ac.createOscillator(), g = ac.createGain();
+      o.type = type;
+      o.frequency.value = freq;
+      g.gain.setValueAtTime(0, ac.currentTime);
+      g.gain.linearRampToValueAtTime(gain, ac.currentTime + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + dur);
+      o.connect(g); g.connect(ac.destination);
+      o.start(); o.stop(ac.currentTime + dur + 0.02);
+    } catch (e) { /* sin audio, sin drama */ }
+  }
+  var sTick  = function () { tone(180, 0.05, "square", 0.03); };
+  var sMiss  = function () { tone(96, 0.16, "triangle", 0.05); };
+  var sClunk = function () { tone(88, 0.28, "sawtooth", 0.09); tone(132, 0.16, "triangle", 0.05); };
+  var sBoom  = function () { tone(58, 0.9, "sawtooth", 0.11); tone(196, 0.5, "sine", 0.05); };
+
+  /* ---------- modo crear ---------- */
+
+  function setupCreator() {
+    $("juego").hidden = true;
+    $("crear").hidden = false;
+    var base = location.origin + location.pathname;
+
+    $("generar").addEventListener("click", function () {
+      var frase = $("frase").value.trim();
+      if (!frase) { $("frase").focus(); return; }
+      var code = encode({ n: $("nombre").value.trim(), m: frase });
+      $("link").value = base + "#" + code;
+      $("link").dataset.code = code;
+      $("resultado").hidden = false;
+      $("link").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+
+    $("copiar").addEventListener("click", function () {
+      var el = $("link");
+      el.select();
+      el.setSelectionRange(0, 99999);
+      var done = function () {
+        $("copiar").textContent = "Copiado";
+        setTimeout(function () { $("copiar").textContent = "Copiar"; }, 1600);
+      };
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(el.value).then(done, function () { document.execCommand("copy"); done(); });
+      } else { document.execCommand("copy"); done(); }
+    });
+
+    $("probar-link").addEventListener("click", function () {
+      location.href = $("link").value;
+      location.reload();
+    });
+  }
+
+  /* ---------- modo juego ---------- */
+
+  var COMENTARIOS = [
+    "Mil combinaciones. Con cabeza, cuatro intentos bastan.",
+    "Bien. Ya sabes hacia dónde girar.",
+    "Vas acorralándola.",
+    "Dos números fijos y el tercero cae solo.",
+    "Esto ya deberías tenerlo.",
+    "La caja empieza a aburrirse.",
+    "Hay gente que lo resuelve en cuatro, dicho sea de paso.",
+    "Insistir también es una técnica.",
+    "El mensaje de adentro no era tan bueno tampoco.",
+    "A este ritmo conviene probar los mil."
+  ];
+
+  function rango(n) {
+    if (n <= 1) return "suerte descarada";
+    if (n <= 3) return "cerrajero profesional";
+    if (n <= 5) return "buen ojo";
+    if (n <= 8) return "a punta de insistencia";
+    return "fuerza bruta pura";
+  }
+
+  function setupGame(data) {
+    $("crear").hidden = true;
+    $("juego").hidden = false;
+
+    var nombre = (data.n || "").trim();
+    $("destino").textContent = nombre || "sin nombre";
+    $("paperName").textContent = nombre || "quien haya abierto esto";
+    $("mensaje").textContent = data.m || "";
+
+    var secret = combo(JSON.stringify(data));
+    var state = [0, 0, 0];
+    var solved = [false, false, false];
+    var tries = 0;
+    var seen = {};
+    var over = false;
+
+    var slots = [];
+    var wrap = $("dials");
+    wrap.textContent = "";
+
+    for (var i = 0; i < 3; i++) (function (i) {
+      var slot = document.createElement("div");
+      slot.className = "dial-slot";
+
+      var up = document.createElement("button");
+      up.className = "nudge";
+      up.type = "button";
+      up.textContent = "▲";
+      up.setAttribute("aria-label", "Subir dial " + (i + 1));
+
+      var dial = document.createElement("button");
+      dial.className = "dial";
+      dial.type = "button";
+      dial.setAttribute("aria-label", "Dial " + (i + 1));
+
+      var ticks = document.createElement("span");
+      ticks.className = "ticks";
+      var num = document.createElement("span");
+      num.className = "num";
+      num.textContent = "0";
+      dial.appendChild(ticks);
+      dial.appendChild(num);
+
+      var down = document.createElement("button");
+      down.className = "nudge";
+      down.type = "button";
+      down.textContent = "▼";
+      down.setAttribute("aria-label", "Bajar dial " + (i + 1));
+
+      var verdict = document.createElement("span");
+      verdict.className = "verdict";
+
+      slot.appendChild(up);
+      slot.appendChild(dial);
+      slot.appendChild(down);
+      slot.appendChild(verdict);
+      wrap.appendChild(slot);
+
+      function move(delta) {
+        if (solved[i] || over) return;
+        state[i] = (state[i] + delta + 10) % 10;
+        ticks.style.transform = "rotate(" + (-36 * (state[i] + i * 10)) + "deg)";
+        num.textContent = String(state[i]);
+        sTick();
+      }
+
+      up.addEventListener("click", function () { move(1); });
+      down.addEventListener("click", function () { move(-1); });
+      dial.addEventListener("click", function () { move(1); });
+      dial.addEventListener("keydown", function (e) {
+        if (e.key === "ArrowUp" || e.key === "ArrowRight") { e.preventDefault(); move(1); }
+        if (e.key === "ArrowDown" || e.key === "ArrowLeft") { e.preventDefault(); move(-1); }
+      });
+
+      slots.push({ slot: slot, verdict: verdict });
+    })(i);
+
+    function attempt() {
+      if (over) return;
+
+      var key = state.join("");
+      if (seen[key]) {
+        $("say").textContent = "Esa ya la probaste.";
+        shake();
+        sMiss();
+        return;
+      }
+      seen[key] = true;
+      tries++;
+      $("count").textContent = String(tries);
+
+      var entry = document.createElement("div");
+      entry.className = "entry";
+      var n = document.createElement("span");
+      n.className = "n";
+      n.textContent = tries;
+      entry.appendChild(n);
+
+      var hits = 0;
+      for (var i = 0; i < 3; i++) {
+        var mark, cls;
+        if (state[i] === secret[i]) { mark = "✓"; cls = "ok"; hits++; }
+        else if (state[i] < secret[i]) { mark = "↑"; cls = "up"; }
+        else { mark = "↓"; cls = "down"; }
+
+        var cell = document.createElement("span");
+        cell.className = "cell" + (cls === "ok" ? " ok" : "");
+        cell.innerHTML = '<span>' + state[i] + '</span><span class="mark">' + mark + '</span>';
+        entry.appendChild(cell);
+
+        slots[i].verdict.textContent = cls === "ok" ? "fijo" : (cls === "up" ? "más alto" : "más bajo");
+        slots[i].verdict.className = "verdict " + cls;
+
+        if (cls === "ok" && !solved[i]) {
+          solved[i] = true;
+          slots[i].slot.classList.add("done");
+        }
+      }
+
+      $("ledger").insertBefore(entry, $("ledger").firstChild);
+
+      if (hits === 3) {
+        over = true;
+        $("say").textContent = "Los tres cerrojos cedieron.";
+        sClunk();
+        shake();
+        setTimeout(function () { open(); }, 520);
+      } else {
+        $("say").textContent = COMENTARIOS[Math.min(tries, COMENTARIOS.length - 1)];
+        if (hits > 0) sClunk(); else sMiss();
+        shake();
+      }
+    }
+
+    function shake() {
+      var d = $("door");
+      d.classList.remove("shake");
+      void d.offsetWidth;
+      d.classList.add("shake");
+    }
+
+    function open() {
+      sBoom();
+      $("scoreN").textContent = String(tries);
+      $("scoreR").textContent = rango(tries);
+      $("door").classList.add("open");
+      $("paper").classList.add("shown");
+      setTimeout(function () { $("door").style.pointerEvents = "none"; }, 1200);
+    }
+
+    $("probar").addEventListener("click", attempt);
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !over) { e.preventDefault(); attempt(); }
+    });
+
+    $("crearOtro").addEventListener("click", function (e) {
+      e.preventDefault();
+      history.replaceState(null, "", location.pathname);
+      location.reload();
+    });
+  }
+
+  /* ---------- arranque ---------- */
+
+  function start() {
+    var raw = location.hash.replace(/^#/, "");
+    if (!raw) { setupCreator(); return; }
+    try {
+      var data = decode(raw);
+      if (!data || typeof data.m !== "string" || !data.m) throw new Error("payload");
+      setupGame(data);
+    } catch (e) {
+      setupCreator();
+    }
+  }
+
+  start();
+  window.addEventListener("hashchange", function () { location.reload(); });
+})();
+</script>
+</body>
+</html>
