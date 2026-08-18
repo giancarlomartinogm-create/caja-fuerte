@@ -205,6 +205,18 @@
 
   .actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
+  .field-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+
+  .counter {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--steel-500);
+    font-variant-numeric: tabular-nums;
+  }
+  .counter.warn { color: var(--brass); }
+
+  .note.warn { color: var(--brass); }
+
   .note { font-size: 12.5px; line-height: 1.55; color: #5f6d79; margin: 0; }
 
   /* ---------- escena de la bóveda ---------- */
@@ -514,8 +526,11 @@
       </div>
 
       <div class="field">
-        <label for="frase">Frase que se desbloquea</label>
-        <textarea id="frase" class="input" maxlength="240" placeholder="El café de la reunión lo pagas tú. Ya está firmado."></textarea>
+        <div class="field-head">
+          <label for="frase">Frase que se desbloquea</label>
+          <span class="counter" id="cuenta">0 / 1200</span>
+        </div>
+        <textarea id="frase" class="input" maxlength="1200" placeholder="El café de la reunión lo pagas tú. Ya está firmado."></textarea>
       </div>
 
       <div>
@@ -533,6 +548,7 @@
         <div class="actions">
           <button id="probar-link" class="btn btn-ghost" type="button">Probarlo</button>
         </div>
+        <p class="note" id="largo"></p>
         <p class="note">La frase viaja dentro del propio link. No se guarda en ningún servidor.</p>
       </div>
     </div>
@@ -582,20 +598,44 @@
 
   /* ---------- carga útil en el hash ---------- */
 
-  function encode(obj) {
-    var bytes = new TextEncoder().encode(JSON.stringify(obj));
+  function b64e(bytes) {
     var bin = "";
     for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
     return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
   }
 
-  function decode(str) {
+  function b64d(str) {
     var s = str.replace(/-/g, "+").replace(/_/g, "/");
     while (s.length % 4) s += "=";
     var bin = atob(s);
     var bytes = new Uint8Array(bin.length);
     for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    return JSON.parse(new TextDecoder().decode(bytes));
+    return bytes;
+  }
+
+  /* el codigo lleva un prefijo: 1 = comprimido, 0 = plano.
+     los links viejos empiezan con "eyJ" y se leen como planos sin prefijo. */
+  function encode(obj) {
+    var bytes = new TextEncoder().encode(JSON.stringify(obj));
+    if (typeof CompressionStream !== "function") return Promise.resolve("0" + b64e(bytes));
+    return new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream("deflate-raw")))
+      .arrayBuffer()
+      .then(function (buf) {
+        var packed = new Uint8Array(buf);
+        return packed.length < bytes.length ? "1" + b64e(packed) : "0" + b64e(bytes);
+      })
+      .catch(function () { return "0" + b64e(bytes); });
+  }
+
+  function decode(str) {
+    var flag = str.charAt(0), body = str;
+    if (flag === "0" || flag === "1") body = str.slice(1); else flag = "0";
+    var bytes = b64d(body);
+    if (flag !== "1") return Promise.resolve(JSON.parse(new TextDecoder().decode(bytes)));
+    if (typeof DecompressionStream !== "function") return Promise.reject(new Error("sin-descompresion"));
+    return new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw")))
+      .arrayBuffer()
+      .then(function (buf) { return JSON.parse(new TextDecoder().decode(new Uint8Array(buf))); });
   }
 
   /* combinación derivada del contenido: nadie la elige, pero no cambia al recargar */
@@ -646,14 +686,31 @@
     $("crear").hidden = false;
     var base = location.origin + location.pathname;
 
+    var frase = $("frase");
+    var cuenta = $("cuenta");
+    var TOPE = Number(frase.getAttribute("maxlength"));
+
+    function contar() {
+      cuenta.textContent = frase.value.length + " / " + TOPE;
+      cuenta.className = "counter" + (frase.value.length > TOPE - 60 ? " warn" : "");
+    }
+    frase.addEventListener("input", contar);
+    contar();
+
     $("generar").addEventListener("click", function () {
-      var frase = $("frase").value.trim();
-      if (!frase) { $("frase").focus(); return; }
-      var code = encode({ n: $("nombre").value.trim(), m: frase });
-      $("link").value = base + "#" + code;
-      $("link").dataset.code = code;
-      $("resultado").hidden = false;
-      $("link").scrollIntoView({ behavior: "smooth", block: "nearest" });
+      var texto = frase.value.trim();
+      if (!texto) { frase.focus(); return; }
+      encode({ n: $("nombre").value.trim(), m: texto }).then(function (code) {
+        var url = base + "#" + code;
+        $("link").value = url;
+        $("link").dataset.code = code;
+        $("largo").textContent = url.length <= 700
+          ? "Link de " + url.length + " caracteres. Entra entero en WhatsApp e Instagram."
+          : "Link de " + url.length + " caracteres. Es largo: pruébalo tú antes de mandarlo.";
+        $("largo").className = "note" + (url.length > 700 ? " warn" : "");
+        $("resultado").hidden = false;
+        $("link").scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
     });
 
     $("copiar").addEventListener("click", function () {
@@ -859,13 +916,16 @@
   function start() {
     var raw = location.hash.replace(/^#/, "");
     if (!raw) { setupCreator(); return; }
-    try {
-      var data = decode(raw);
+    decode(raw).then(function (data) {
       if (!data || typeof data.m !== "string" || !data.m) throw new Error("payload");
       setupGame(data);
-    } catch (e) {
+    }).catch(function (e) {
       setupCreator();
-    }
+      if (e && e.message === "sin-descompresion") {
+        $("crear").querySelector(".lede").textContent =
+          "Este navegador es muy antiguo para abrir el mensaje. Ábrelo en Chrome, Safari o Firefox actualizado.";
+      }
+    });
   }
 
   start();
