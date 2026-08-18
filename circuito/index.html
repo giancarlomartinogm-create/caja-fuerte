@@ -54,7 +54,7 @@
     padding: 28px 18px 44px;
   }
 
-  #app { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 20px; }
+  #app { width: 100%; max-width: 620px; display: flex; flex-direction: column; gap: 20px; }
 
   [hidden] { display: none !important; }
 
@@ -417,7 +417,7 @@
   <section id="crear" class="panel" hidden>
     <p class="eyebrow">Depósito de seguridad</p>
     <h1 class="plate-title">Bóveda Nº 3</h1>
-    <p class="lede">Encierra una frase adentro y manda el link. Para leerla hay que reparar el circuito de dos niveles y después acertar un acertijo de geografía chilena.</p>
+    <p class="lede">Encierra una frase adentro y manda el link. Para leerla hay que reparar un circuito de dos niveles y después acertar un acertijo de geografía chilena.</p>
 
     <hr class="rule">
 
@@ -466,7 +466,7 @@
 
         <!-- acto 1 -->
         <div id="acto1">
-          <p class="lede">Los cables del mismo color están sueltos. Únelos arrastrando el dedo de uno a otro, sin soltar, sin salirte del círculo y sin cruzar ningún cable.</p>
+          <p class="lede">Los cables del mismo color están sueltos. Únelos arrastrando el dedo de uno a otro, sin soltar, sin salirte del círculo y sin cruzar ningún cable. Casi ninguno se une en línea recta: hay que rodear.</p>
 
           <div class="screen" id="screen">
             <canvas id="lienzo"></canvas>
@@ -663,32 +663,47 @@
     { hex: "#e0483d", marca: "circulo" },
     { hex: "#3b82d9", marca: "cuadrado" },
     { hex: "#35b46a", marca: "triangulo" },
-    { hex: "#e0a92e", marca: "rombo" }
+    { hex: "#e0a92e", marca: "rombo" },
+    { hex: "#a86ddd", marca: "cruz" },
+    { hex: "#2fb8c6", marca: "barra" }
   ];
+
+  function pol(grados, radio) {
+    var r = grados * Math.PI / 180;
+    return [0.5 + radio * Math.cos(r), 0.5 - radio * Math.sin(r)];
+  }
 
   var NIVELES = [
     {
       titulo: "Nivel uno",
-      texto: "Tres pares. Une cada color con su gemelo.",
+      texto: "Cuatro pares, y casi todos se estorban. El camino corto casi nunca sirve.",
+      anillo: 0.335,
+      dot: 0.047,
       pares: [
-        { c: 0, a: [0.36, 0.24], b: [0.75, 0.66] },
-        { c: 1, a: [0.87, 0.37], b: [0.10, 0.56] },
-        { c: 2, a: [0.50, 0.47], b: [0.46, 0.79] }
+        { c: 0, aa: 0,   ab: 90 },
+        { c: 1, aa: 45,  ab: 180 },
+        { c: 2, aa: 135, ab: 270 },
+        { c: 3, aa: 225, ab: 315 }
       ]
     },
     {
       titulo: "Nivel dos",
-      texto: "Cuatro pares y se estorban entre ellos. Piensa el orden antes de trazar.",
+      texto: "Seis pares. Decide cuáles pasan por dentro y cuáles por la orilla, o te quedas sin espacio.",
+      anillo: 0.355,
+      dot: 0.038,
       pares: [
-        { c: 0, a: [0.28, 0.26], b: [0.72, 0.26] },
-        { c: 2, a: [0.28, 0.74], b: [0.72, 0.74] },
-        { c: 3, a: [0.50, 0.36], b: [0.50, 0.64] },
-        { c: 1, a: [0.14, 0.50], b: [0.86, 0.50] }
+        { c: 1, aa: 30,  ab: 60 },
+        { c: 2, aa: 90,  ab: 150 },
+        { c: 4, aa: 180, ab: 240 },
+        { c: 0, aa: 0,   ab: 270 },
+        { c: 3, aa: 120, ab: 330 },
+        { c: 5, aa: 210, ab: 300 }
       ]
     }
   ];
 
-  var CX = 0.5, CY = 0.5, RAD = 0.455, DOT = 0.052, LINEA = 0.026;
+  var CX = 0.5, CY = 0.5, RAD = 0.468, LINEA = 0.023;
+  var DOT = 0.047;
 
   function seg(p1, p2, p3, p4) {
     function o(a, b, c) {
@@ -721,9 +736,11 @@
       puntos = [];
       trazos = [];
       activo = null;
+      DOT = L.dot;
       L.pares.forEach(function (p, i) {
-        puntos.push({ x: p.a[0], y: p.a[1], c: p.c, par: i });
-        puntos.push({ x: p.b[0], y: p.b[1], c: p.c, par: i });
+        var a = pol(p.aa, L.anillo), b = pol(p.ab, L.anillo);
+        puntos.push({ x: a[0], y: a[1], c: p.c, par: i });
+        puntos.push({ x: b[0], y: b[1], c: p.c, par: i });
       });
       $("nivel").textContent = String(nivel + 1);
       $("total").textContent = String(L.pares.length);
@@ -762,11 +779,17 @@
         ctx.moveTo(x, y - r * 1.15);
         ctx.lineTo(x + r, y + r * 0.8);
         ctx.lineTo(x - r, y + r * 0.8);
-      } else {
+      } else if (tipo === "rombo") {
         ctx.moveTo(x, y - r * 1.25);
         ctx.lineTo(x + r * 1.25, y);
         ctx.lineTo(x, y + r * 1.25);
         ctx.lineTo(x - r * 1.25, y);
+      } else if (tipo === "cruz") {
+        var g = r * 0.42;
+        ctx.rect(x - g, y - r * 1.2, g * 2, r * 2.4);
+        ctx.rect(x - r * 1.2, y - g, r * 2.4, g * 2);
+      } else {
+        ctx.rect(x - r * 1.3, y - r * 0.42, r * 2.6, r * 0.84);
       }
       ctx.closePath();
       ctx.fill();
