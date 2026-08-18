@@ -690,7 +690,7 @@
       titulo: "Nivel dos",
       texto: "Seis pares. Decide cuáles pasan por dentro y cuáles por la orilla, o te quedas sin espacio.",
       anillo: 0.355,
-      dot: 0.038,
+      dot: 0.042,
       pares: [
         { c: 1, aa: 30,  ab: 60 },
         { c: 2, aa: 90,  ab: 150 },
@@ -896,11 +896,15 @@
       return { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height };
     }
 
+    function agarre() { return Math.max(DOT * 1.35, 0.072); }
+
     function indiceCerca(p) {
+      var mejor = -1, dm = agarre();
       for (var i = 0; i < puntos.length; i++) {
-        if (Math.hypot(puntos[i].x - p.x, puntos[i].y - p.y) < DOT * 1.35) return i;
+        var d = Math.hypot(puntos[i].x - p.x, puntos[i].y - p.y);
+        if (d < dm) { dm = d; mejor = i; }
       }
-      return -1;
+      return mejor;
     }
 
     canvas.addEventListener("pointerdown", function (e) {
@@ -941,7 +945,7 @@
       if (e) e.preventDefault();
       var meta = puntos[activo.hasta];
       var last = activo.pts[activo.pts.length - 1];
-      if (Math.hypot(last.x - meta.x, last.y - meta.y) < DOT * 1.35 && activo.pts.length > 2) {
+      if (Math.hypot(last.x - meta.x, last.y - meta.y) < agarre() && activo.pts.length > 2) {
         activo.pts.push({ x: meta.x, y: meta.y });
         trazos.push(activo);
         activo = null;
