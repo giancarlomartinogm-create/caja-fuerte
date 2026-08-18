@@ -1,0 +1,1151 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bóveda Nº 3 · Circuito</title>
+<meta name="description" content="Une los cables sin cruzarlos, responde el acertijo y lee el mensaje.">
+<meta property="og:title" content="Bóveda Nº 3">
+<meta property="og:description" content="Alguien encerró un mensaje aquí adentro. Primero hay que reparar el circuito.">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+
+  :root {
+    --steel-950: #0e1216;
+    --steel-900: #151b21;
+    --steel-850: #1a2128;
+    --steel-800: #212a32;
+    --steel-700: #2d3841;
+    --steel-600: #3d4a55;
+    --steel-500: #55646f;
+    --steel-400: #6f8090;
+    --steel-300: #93a3b1;
+    --brass: #c19a44;
+    --brass-hi: #f2dda3;
+    --brass-dim: #6d5726;
+    --oxblood: #8a3128;
+    --paper: #ece3d0;
+    --paper-2: #ded3bb;
+    --ink: #23282d;
+
+    --font-plate: Copperplate, "Copperplate Gothic Light", "Big Caslon", Palatino, Georgia, serif;
+    --font-body: "Avenir Next", Avenir, "Gill Sans", "Segoe UI", system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace;
+
+    color-scheme: dark;
+  }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    overflow-x: hidden;
+    min-height: 100vh;
+    background:
+      radial-gradient(120% 90% at 50% -10%, #23303a 0%, transparent 60%),
+      radial-gradient(100% 70% at 50% 110%, #1b2229 0%, transparent 55%),
+      var(--steel-950);
+    color: var(--steel-300);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 18px 44px;
+  }
+
+  #app { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 20px; }
+
+  [hidden] { display: none !important; }
+
+  /* ---------- chapa ---------- */
+
+  .panel {
+    position: relative;
+    border-radius: 10px;
+    background: linear-gradient(180deg, var(--steel-800) 0%, var(--steel-850) 45%, var(--steel-900) 100%);
+    border: 1px solid var(--steel-700);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.07),
+      inset 0 -1px 0 rgba(0,0,0,.5),
+      0 26px 60px -24px rgba(0,0,0,.9);
+    padding: 30px 28px 32px;
+  }
+
+  .panel::before,
+  .panel::after {
+    content: "";
+    position: absolute;
+    inset: 9px;
+    border-radius: 4px;
+    pointer-events: none;
+  }
+  .panel::before { border: 1px solid rgba(193,154,68,.16); }
+  .panel::after {
+    background:
+      radial-gradient(circle at 6px 6px, var(--brass-dim) 0 2.2px, transparent 2.6px),
+      radial-gradient(circle at calc(100% - 6px) 6px, var(--brass-dim) 0 2.2px, transparent 2.6px),
+      radial-gradient(circle at 6px calc(100% - 6px), var(--brass-dim) 0 2.2px, transparent 2.6px),
+      radial-gradient(circle at calc(100% - 6px) calc(100% - 6px), var(--brass-dim) 0 2.2px, transparent 2.6px);
+  }
+
+  .eyebrow {
+    font-family: var(--font-plate);
+    font-size: 11px;
+    letter-spacing: .28em;
+    text-transform: uppercase;
+    color: var(--brass);
+    margin: 0;
+  }
+
+  .plate-title {
+    font-family: var(--font-plate);
+    font-size: clamp(25px, 6.6vw, 37px);
+    line-height: 1.05;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--brass-hi);
+    margin: 6px 0 0;
+    text-wrap: balance;
+    text-shadow: 0 1px 0 rgba(0,0,0,.7), 0 0 22px rgba(193,154,68,.16);
+  }
+
+  .lede {
+    margin: 12px 0 0;
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--steel-400);
+    max-width: 48ch;
+  }
+
+  hr.rule {
+    border: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--steel-700) 15%, var(--steel-700) 85%, transparent);
+    margin: 24px 0;
+  }
+
+  /* ---------- formulario ---------- */
+
+  .form { display: flex; flex-direction: column; gap: 18px; }
+  .field { display: flex; flex-direction: column; gap: 7px; }
+
+  .field label {
+    font-family: var(--font-plate);
+    font-size: 10.5px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--steel-400);
+  }
+
+  .field-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+
+  .counter {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--steel-500);
+    font-variant-numeric: tabular-nums;
+  }
+  .counter.warn { color: var(--brass); }
+
+  .input {
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--paper);
+    background: var(--steel-950);
+    border: 1px solid var(--steel-700);
+    border-radius: 5px;
+    padding: 11px 13px;
+    width: 100%;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .input::placeholder { color: #56636e; }
+  .input:focus-visible {
+    outline: none;
+    border-color: var(--brass);
+    box-shadow: 0 0 0 3px rgba(193,154,68,.18);
+  }
+  textarea.input { resize: vertical; min-height: 92px; }
+
+  button {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .btn {
+    font-family: var(--font-plate);
+    font-size: 12px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--steel-950);
+    background: linear-gradient(180deg, var(--brass-hi), var(--brass) 55%, #9a7a32);
+    border: 1px solid #7d6228;
+    border-radius: 5px;
+    padding: 13px 20px;
+    cursor: pointer;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 6px 18px -8px rgba(193,154,68,.7);
+    transition: transform .12s, filter .15s;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:active { transform: translateY(1px); }
+  .btn:focus-visible { outline: 2px solid var(--brass-hi); outline-offset: 3px; }
+
+  .btn-ghost { background: transparent; color: var(--brass); border: 1px solid var(--steel-600); box-shadow: none; }
+  .btn-ghost:hover { border-color: var(--brass-dim); background: rgba(193,154,68,.06); }
+
+  .btn-small { font-size: 10.5px; padding: 9px 14px; letter-spacing: .14em; }
+
+  .result { display: flex; flex-direction: column; gap: 10px; }
+  .link-row { display: flex; gap: 8px; align-items: stretch; }
+  .link-row .input { font-family: var(--font-mono); font-size: 12.5px; color: var(--brass-hi); }
+  .link-row .btn { white-space: nowrap; padding: 0 16px; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .note { font-size: 12.5px; line-height: 1.55; color: #5f6d79; margin: 0; }
+  .note.warn { color: var(--brass); }
+
+  /* ---------- escena ---------- */
+
+  .stage { display: grid; perspective: 1400px; }
+  .stage > * { grid-area: 1 / 1; }
+
+  .door {
+    transform-origin: left center;
+    transform-style: preserve-3d;
+    transition: transform 1.15s cubic-bezier(.6,.02,.25,1), box-shadow 1.15s, filter 1.15s;
+    z-index: 2;
+  }
+  .door.open {
+    transform: translateX(-2%) rotateY(-108deg);
+    filter: brightness(.42) saturate(.7);
+    box-shadow: 30px 30px 70px -20px rgba(0,0,0,.95);
+  }
+
+  .shake { animation: shake .32s ease-out; }
+  @keyframes shake {
+    0%,100% { translate: 0 0; }
+    22% { translate: -3px 1px; }
+    48% { translate: 3px -1px; }
+    74% { translate: -1.5px 0; }
+  }
+
+  .to-line {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    letter-spacing: .04em;
+    color: var(--steel-400);
+    margin: 14px 0 0;
+  }
+  .to-line b { color: var(--paper); font-weight: 600; }
+
+  .act { animation: fadeUp .45s ease-out; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } }
+
+  /* ---------- acto 1: circuito ---------- */
+
+  .screen {
+    position: relative;
+    margin: 20px 0 0;
+    border-radius: 6px;
+    border: 1px solid var(--steel-700);
+    background: #0b0f13;
+    box-shadow: inset 0 0 40px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.05);
+    overflow: hidden;
+    touch-action: none;
+  }
+  .screen canvas { display: block; width: 100%; height: auto; touch-action: none; }
+
+  .overlay {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    gap: 12px;
+    justify-items: center;
+    text-align: center;
+    padding: 20px;
+    background: rgba(11,15,19,.86);
+    backdrop-filter: blur(2px);
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .overlay p { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--steel-400); max-width: 34ch; }
+  .overlay .big {
+    font-family: var(--font-plate);
+    font-size: 15px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--brass-hi);
+  }
+
+  .board-bar {
+    margin: 14px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .board-bar .actions { gap: 8px; }
+
+  .level-tag {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: .05em;
+    color: var(--steel-400);
+  }
+  .level-tag b { color: var(--brass); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  .say { font-size: 13.5px; line-height: 1.5; color: var(--steel-500); margin: 14px 0 0; min-height: 20px; font-style: italic; }
+
+  /* ---------- acto 2: acertijo ---------- */
+
+  .riddle {
+    margin: 22px 0 0;
+    padding: 22px 20px;
+    border-radius: 6px;
+    border: 1px solid var(--steel-700);
+    border-left: 3px solid var(--brass);
+    background: rgba(11,15,19,.6);
+  }
+  .riddle p {
+    margin: 0;
+    font-family: var(--font-plate);
+    font-size: clamp(16px, 4.2vw, 20px);
+    line-height: 1.45;
+    color: var(--brass-hi);
+    text-wrap: balance;
+  }
+
+  .hint {
+    margin: 14px 0 0;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--steel-400);
+  }
+  .hint b { color: var(--brass); font-weight: 600; }
+
+  .answer-row { display: flex; gap: 8px; margin: 18px 0 0; }
+  .answer-row .input { flex: 1; }
+  .answer-row .btn { white-space: nowrap; padding: 0 18px; }
+
+  .verdict-msg { margin: 12px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--steel-500); min-height: 20px; }
+  .verdict-msg.bad { color: #d08d84; }
+  .verdict-msg.good { color: var(--brass); }
+
+  /* ---------- papel ---------- */
+
+  .paper {
+    position: relative;
+    align-self: start;
+    z-index: 1;
+    border-radius: 8px;
+    background: linear-gradient(160deg, var(--paper) 0%, var(--paper-2) 100%);
+    color: var(--ink);
+    padding: 40px 34px 34px;
+    box-shadow: inset 0 0 60px rgba(120,100,60,.16), 0 20px 50px -26px rgba(0,0,0,.9);
+    opacity: 0;
+    transition: opacity .5s .55s;
+  }
+  .paper.shown { opacity: 1; }
+  .paper .eyebrow { color: #8a6f2d; }
+
+  .paper-to { font-family: var(--font-mono); font-size: 12.5px; color: #6a604d; margin: 4px 0 20px; }
+  .paper-to b { color: var(--ink); }
+
+  .message {
+    font-family: var(--font-plate);
+    font-size: clamp(20px, 5.2vw, 28px);
+    line-height: 1.32;
+    color: var(--ink);
+    margin: 0;
+    text-wrap: balance;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .verdict-line { margin: 24px 0 0; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+
+  .stamp {
+    display: inline-block;
+    font-family: var(--font-plate);
+    font-size: 12px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--oxblood);
+    border: 2px solid var(--oxblood);
+    border-radius: 3px;
+    padding: 7px 14px;
+    rotate: -4deg;
+    opacity: .82;
+  }
+
+  .score { font-family: var(--font-mono); font-size: 12.5px; color: #6a604d; }
+  .score b { color: var(--ink); }
+
+  .credit {
+    text-align: center;
+    font-family: var(--font-plate);
+    font-size: 10px;
+    letter-spacing: .24em;
+    text-transform: uppercase;
+    color: #3d4952;
+    margin: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .door, .paper { transition-duration: .01ms; }
+    .shake, .act { animation: none; }
+  }
+
+  @media (max-width: 420px) {
+    .panel { padding: 24px 16px 26px; }
+    .paper { padding: 32px 20px 26px; }
+    .link-row { flex-direction: column; }
+    .riddle { padding: 18px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<main id="app">
+
+  <!-- ============ CREAR ============ -->
+  <section id="crear" class="panel" hidden>
+    <p class="eyebrow">Depósito de seguridad</p>
+    <h1 class="plate-title">Bóveda Nº 3</h1>
+    <p class="lede">Encierra una frase adentro y manda el link. Para leerla hay que reparar el circuito de dos niveles y después acertar un acertijo de geografía chilena.</p>
+
+    <hr class="rule">
+
+    <div class="form">
+      <div class="field">
+        <label for="nombre">Para quién es</label>
+        <input id="nombre" class="input" type="text" maxlength="40" placeholder="Camila" autocomplete="off">
+      </div>
+
+      <div class="field">
+        <div class="field-head">
+          <label for="frase">Frase que se desbloquea</label>
+          <span class="counter" id="cuenta">0 / 1200</span>
+        </div>
+        <textarea id="frase" class="input" maxlength="1200" placeholder="El café de la reunión lo pagas tú. Ya está firmado."></textarea>
+      </div>
+
+      <div>
+        <button id="generar" class="btn" type="button">Sellar la bóveda</button>
+      </div>
+
+      <div id="resultado" class="result" hidden>
+        <div class="field">
+          <label for="link">Link para enviar</label>
+          <div class="link-row">
+            <input id="link" class="input" type="text" readonly>
+            <button id="copiar" class="btn" type="button">Copiar</button>
+          </div>
+        </div>
+        <div class="actions">
+          <button id="probar-link" class="btn btn-ghost" type="button">Probarlo</button>
+        </div>
+        <p class="note" id="largo"></p>
+        <p class="note">La frase viaja dentro del propio link. No se guarda en ningún servidor. El acertijo se sortea a partir del mensaje, así que cada link trae uno distinto.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ JUEGO ============ -->
+  <section id="juego" hidden>
+    <div class="stage">
+      <div id="door" class="panel door">
+        <p class="eyebrow" id="acto">Acto uno · Circuito</p>
+        <h1 class="plate-title">Bóveda Nº 3</h1>
+        <p class="to-line">Destinatario: <b id="destino">—</b></p>
+
+        <!-- acto 1 -->
+        <div id="acto1">
+          <p class="lede">Los cables del mismo color están sueltos. Únelos arrastrando el dedo de uno a otro, sin soltar, sin salirte del círculo y sin cruzar ningún cable.</p>
+
+          <div class="screen" id="screen">
+            <canvas id="lienzo"></canvas>
+            <div class="overlay" id="overlay">
+              <span class="big" id="ovTitle">Circuito</span>
+              <p id="ovText">Arrastra de un punto al otro del mismo color. Si un cable se cruza con otro, se quema.</p>
+              <button class="btn" id="ovBtn" type="button">Empezar</button>
+            </div>
+          </div>
+
+          <div class="board-bar">
+            <span class="level-tag">Nivel <b id="nivel">1</b> de 2 · <b id="unidos">0</b>/<span id="total">3</span> cables</span>
+            <span class="actions">
+              <button class="btn btn-ghost btn-small" id="deshacer" type="button">Deshacer</button>
+              <button class="btn btn-ghost btn-small" id="reiniciar" type="button">Reiniciar</button>
+            </span>
+          </div>
+          <p class="say" id="say">Empieza por el par que tengas más despejado.</p>
+        </div>
+
+        <!-- acto 2 -->
+        <div id="acto2" hidden>
+          <p class="lede">El circuito está vivo, pero la bóveda pide una última palabra antes de abrirse.</p>
+
+          <div class="riddle">
+            <p id="acertijo">—</p>
+          </div>
+
+          <p class="hint" id="pista">—</p>
+
+          <div class="answer-row">
+            <input id="respuesta" class="input" type="text" maxlength="40" placeholder="Tu respuesta" autocomplete="off" autocapitalize="words" spellcheck="false">
+            <button id="responder" class="btn" type="button">Responder</button>
+          </div>
+
+          <p class="verdict-msg" id="veredicto"></p>
+        </div>
+      </div>
+
+      <article id="paper" class="paper">
+        <p class="eyebrow">Acta de apertura</p>
+        <p class="paper-to">Entregado a <b id="paperName">—</b></p>
+        <p class="message" id="mensaje"></p>
+        <p class="verdict-line">
+          <span class="stamp">Desclasificado</span>
+          <span class="score"><b id="scoreQ">0</b> cables quemados · acertijo en <b id="scoreN">0</b> intentos · <b id="scoreR"></b></span>
+        </p>
+      </article>
+    </div>
+    <p class="credit">Bóveda privada · 2 niveles · 1 acertijo</p>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ---------- carga útil en el hash ---------- */
+
+  function b64e(bytes) {
+    var bin = "";
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+
+  function b64d(str) {
+    var s = str.replace(/-/g, "+").replace(/_/g, "/");
+    while (s.length % 4) s += "=";
+    var bin = atob(s);
+    var bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes;
+  }
+
+  function encode(obj) {
+    var bytes = new TextEncoder().encode(JSON.stringify(obj));
+    if (typeof CompressionStream !== "function") return Promise.resolve("0" + b64e(bytes));
+    return new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream("deflate-raw")))
+      .arrayBuffer()
+      .then(function (buf) {
+        var packed = new Uint8Array(buf);
+        return packed.length < bytes.length ? "1" + b64e(packed) : "0" + b64e(bytes);
+      })
+      .catch(function () { return "0" + b64e(bytes); });
+  }
+
+  function decode(str) {
+    var flag = str.charAt(0), body = str;
+    if (flag === "0" || flag === "1") body = str.slice(1); else flag = "0";
+    var bytes = b64d(body);
+    if (flag !== "1") return Promise.resolve(JSON.parse(new TextDecoder().decode(bytes)));
+    if (typeof DecompressionStream !== "function") return Promise.reject(new Error("sin-descompresion"));
+    return new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw")))
+      .arrayBuffer()
+      .then(function (buf) { return JSON.parse(new TextDecoder().decode(new Uint8Array(buf))); });
+  }
+
+  function hashOf(seed) {
+    var h = 2166136261;
+    for (var i = 0; i < seed.length; i++) {
+      h ^= seed.charCodeAt(i);
+      h = Math.imul(h, 16777619) >>> 0;
+    }
+    return h;
+  }
+
+  /* ---------- sonido ---------- */
+
+  var ac = null;
+  function tone(freq, dur, type, gain) {
+    try {
+      if (!ac) {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        ac = new AC();
+      }
+      if (ac.state === "suspended") ac.resume();
+      var o = ac.createOscillator(), g = ac.createGain();
+      o.type = type;
+      o.frequency.value = freq;
+      g.gain.setValueAtTime(0, ac.currentTime);
+      g.gain.linearRampToValueAtTime(gain, ac.currentTime + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + dur);
+      o.connect(g); g.connect(ac.destination);
+      o.start(); o.stop(ac.currentTime + dur + 0.02);
+    } catch (e) { /* sin audio, sin drama */ }
+  }
+  var sTick  = function () { tone(180, 0.05, "square", 0.03); };
+  var sLink  = function () { tone(620, 0.1, "square", 0.045); tone(930, 0.08, "square", 0.022); };
+  var sBurn  = function () { tone(78, 0.3, "sawtooth", 0.085); };
+  var sMiss  = function () { tone(96, 0.16, "triangle", 0.05); };
+  var sClunk = function () { tone(88, 0.28, "sawtooth", 0.09); tone(132, 0.16, "triangle", 0.05); };
+  var sBoom  = function () { tone(58, 0.9, "sawtooth", 0.11); tone(196, 0.5, "sine", 0.05); };
+
+  /* ---------- modo crear ---------- */
+
+  function setupCreator() {
+    $("juego").hidden = true;
+    $("crear").hidden = false;
+    var base = location.origin + location.pathname;
+
+    var frase = $("frase");
+    var cuenta = $("cuenta");
+    var TOPE = Number(frase.getAttribute("maxlength"));
+
+    function contar() {
+      cuenta.textContent = frase.value.length + " / " + TOPE;
+      cuenta.className = "counter" + (frase.value.length > TOPE - 60 ? " warn" : "");
+    }
+    frase.addEventListener("input", contar);
+    contar();
+
+    $("generar").addEventListener("click", function () {
+      var texto = frase.value.trim();
+      if (!texto) { frase.focus(); return; }
+      encode({ n: $("nombre").value.trim(), m: texto }).then(function (code) {
+        var url = base + "#" + code;
+        $("link").value = url;
+        $("link").dataset.code = code;
+        $("largo").textContent = url.length <= 700
+          ? "Link de " + url.length + " caracteres. Entra entero en WhatsApp e Instagram."
+          : "Link de " + url.length + " caracteres. Es largo: pruébalo tú antes de mandarlo.";
+        $("largo").className = "note" + (url.length > 700 ? " warn" : "");
+        $("resultado").hidden = false;
+        $("link").scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+    });
+
+    $("copiar").addEventListener("click", function () {
+      var el = $("link");
+      el.select();
+      el.setSelectionRange(0, 99999);
+      var done = function () {
+        $("copiar").textContent = "Copiado";
+        setTimeout(function () { $("copiar").textContent = "Copiar"; }, 1600);
+      };
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(el.value).then(done, function () { document.execCommand("copy"); done(); });
+      } else { document.execCommand("copy"); done(); }
+    });
+
+    $("probar-link").addEventListener("click", function () {
+      location.href = $("link").value;
+      location.reload();
+    });
+  }
+
+  /* ---------- acto 1: el circuito ---------- */
+
+  var COLORES = [
+    { hex: "#e0483d", marca: "circulo" },
+    { hex: "#3b82d9", marca: "cuadrado" },
+    { hex: "#35b46a", marca: "triangulo" },
+    { hex: "#e0a92e", marca: "rombo" }
+  ];
+
+  var NIVELES = [
+    {
+      titulo: "Nivel uno",
+      texto: "Tres pares. Une cada color con su gemelo.",
+      pares: [
+        { c: 0, a: [0.36, 0.24], b: [0.75, 0.66] },
+        { c: 1, a: [0.87, 0.37], b: [0.10, 0.56] },
+        { c: 2, a: [0.50, 0.47], b: [0.46, 0.79] }
+      ]
+    },
+    {
+      titulo: "Nivel dos",
+      texto: "Cuatro pares y se estorban entre ellos. Piensa el orden antes de trazar.",
+      pares: [
+        { c: 0, a: [0.28, 0.26], b: [0.72, 0.26] },
+        { c: 2, a: [0.28, 0.74], b: [0.72, 0.74] },
+        { c: 3, a: [0.50, 0.36], b: [0.50, 0.64] },
+        { c: 1, a: [0.14, 0.50], b: [0.86, 0.50] }
+      ]
+    }
+  ];
+
+  var CX = 0.5, CY = 0.5, RAD = 0.455, DOT = 0.052, LINEA = 0.026;
+
+  function seg(p1, p2, p3, p4) {
+    function o(a, b, c) {
+      var v = (b.y - a.y) * (c.x - b.x) - (b.x - a.x) * (c.y - b.y);
+      return v > 1e-9 ? 1 : (v < -1e-9 ? -1 : 0);
+    }
+    var o1 = o(p1, p2, p3), o2 = o(p1, p2, p4), o3 = o(p3, p4, p1), o4 = o(p3, p4, p2);
+    return o1 !== o2 && o3 !== o4;
+  }
+
+  function distSeg(p, a, b) {
+    var dx = b.x - a.x, dy = b.y - a.y;
+    var L = dx * dx + dy * dy;
+    var t = L === 0 ? 0 : ((p.x - a.x) * dx + (p.y - a.y) * dy) / L;
+    t = Math.max(0, Math.min(1, t));
+    var qx = a.x + t * dx, qy = a.y + t * dy;
+    return Math.hypot(p.x - qx, p.y - qy);
+  }
+
+  function setupCircuito(onDone) {
+    var canvas = $("lienzo");
+    var ctx = canvas.getContext("2d");
+    var size = 1, dpr = 1;
+
+    var nivel = 0, quemados = 0;
+    var puntos = [], trazos = [], activo = null, listo = false;
+
+    function cargar() {
+      var L = NIVELES[nivel];
+      puntos = [];
+      trazos = [];
+      activo = null;
+      L.pares.forEach(function (p, i) {
+        puntos.push({ x: p.a[0], y: p.a[1], c: p.c, par: i });
+        puntos.push({ x: p.b[0], y: p.b[1], c: p.c, par: i });
+      });
+      $("nivel").textContent = String(nivel + 1);
+      $("total").textContent = String(L.pares.length);
+      $("unidos").textContent = "0";
+      $("say").textContent = L.texto;
+      dibujar();
+    }
+
+    function unidos() { return trazos.length; }
+
+    function parUnido(i) {
+      for (var k = 0; k < trazos.length; k++) if (trazos[k].par === i) return true;
+      return false;
+    }
+
+    function resize() {
+      var w = canvas.parentNode.clientWidth;
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(w * dpr);
+      canvas.style.height = w + "px";
+      size = canvas.width;
+      dibujar();
+    }
+
+    function P(p) { return { x: p.x * size, y: p.y * size }; }
+
+    function marca(ctx, tipo, x, y, r) {
+      ctx.fillStyle = "rgba(10,14,18,.42)";
+      ctx.beginPath();
+      if (tipo === "circulo") {
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+      } else if (tipo === "cuadrado") {
+        ctx.rect(x - r, y - r, r * 2, r * 2);
+      } else if (tipo === "triangulo") {
+        ctx.moveTo(x, y - r * 1.15);
+        ctx.lineTo(x + r, y + r * 0.8);
+        ctx.lineTo(x - r, y + r * 0.8);
+      } else {
+        ctx.moveTo(x, y - r * 1.25);
+        ctx.lineTo(x + r * 1.25, y);
+        ctx.lineTo(x, y + r * 1.25);
+        ctx.lineTo(x - r * 1.25, y);
+      }
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function trazar(pts, color, alpha) {
+      if (pts.length < 2) return;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = LINEA * size;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.beginPath();
+      var p0 = P(pts[0]);
+      ctx.moveTo(p0.x, p0.y);
+      for (var i = 1; i < pts.length; i++) {
+        var p = P(pts[i]);
+        ctx.lineTo(p.x, p.y);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function dibujar() {
+      if (!size) return;
+      ctx.clearRect(0, 0, size, size);
+      ctx.fillStyle = "#0b0f13";
+      ctx.fillRect(0, 0, size, size);
+
+      ctx.strokeStyle = "rgba(193,154,68,.42)";
+      ctx.lineWidth = Math.max(1.5, size * 0.006);
+      ctx.beginPath();
+      ctx.arc(CX * size, CY * size, RAD * size, 0, Math.PI * 2);
+      ctx.stroke();
+
+      trazos.forEach(function (t) { trazar(t.pts, COLORES[t.c].hex, 1); });
+      if (activo) trazar(activo.pts, COLORES[activo.c].hex, 0.75);
+
+      puntos.forEach(function (d) {
+        var p = P(d), r = DOT * size;
+        var hecho = parUnido(d.par);
+        ctx.save();
+        if (hecho) {
+          ctx.shadowColor = COLORES[d.c].hex;
+          ctx.shadowBlur = r * 0.9;
+        }
+        ctx.fillStyle = COLORES[d.c].hex;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        marca(ctx, COLORES[d.c].marca, p.x, p.y, r * 0.32);
+      });
+    }
+
+    /* --- validación --- */
+
+    function fueraDelCirculo(p) {
+      return Math.hypot(p.x - CX, p.y - CY) > RAD;
+    }
+
+    function chocaConTrazos(a, b) {
+      for (var t = 0; t < trazos.length; t++) {
+        var pts = trazos[t].pts;
+        for (var i = 0; i < pts.length - 1; i++) {
+          if (seg(a, b, pts[i], pts[i + 1])) return true;
+        }
+      }
+      return false;
+    }
+
+    function chocaConsigo(a, b, pts) {
+      for (var i = 0; i < pts.length - 2; i++) {
+        if (seg(a, b, pts[i], pts[i + 1])) return true;
+      }
+      return false;
+    }
+
+    function pisaUnPunto(a, b, permitidos) {
+      for (var i = 0; i < puntos.length; i++) {
+        if (permitidos.indexOf(i) >= 0) continue;
+        if (distSeg(puntos[i], a, b) < DOT * 0.92) return true;
+      }
+      return false;
+    }
+
+    function quemar(motivo) {
+      quemados++;
+      activo = null;
+      sBurn();
+      $("say").textContent = motivo;
+      var d = $("door");
+      d.classList.remove("shake");
+      void d.offsetWidth;
+      d.classList.add("shake");
+      dibujar();
+    }
+
+    /* --- puntero --- */
+
+    function pos(e) {
+      var r = canvas.getBoundingClientRect();
+      return { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height };
+    }
+
+    function indiceCerca(p) {
+      for (var i = 0; i < puntos.length; i++) {
+        if (Math.hypot(puntos[i].x - p.x, puntos[i].y - p.y) < DOT * 1.35) return i;
+      }
+      return -1;
+    }
+
+    canvas.addEventListener("pointerdown", function (e) {
+      if (listo || !$("overlay").hidden) return;
+      var p = pos(e);
+      var i = indiceCerca(p);
+      if (i < 0) return;
+      if (parUnido(puntos[i].par)) return;
+      e.preventDefault();
+      canvas.setPointerCapture(e.pointerId);
+      var otro = -1;
+      for (var k = 0; k < puntos.length; k++) {
+        if (k !== i && puntos[k].par === puntos[i].par) otro = k;
+      }
+      activo = { c: puntos[i].c, par: puntos[i].par, desde: i, hasta: otro, pts: [{ x: puntos[i].x, y: puntos[i].y }] };
+      sTick();
+      dibujar();
+    });
+
+    canvas.addEventListener("pointermove", function (e) {
+      if (!activo) return;
+      e.preventDefault();
+      var p = pos(e);
+      var last = activo.pts[activo.pts.length - 1];
+      if (Math.hypot(p.x - last.x, p.y - last.y) < 0.012) return;
+
+      if (fueraDelCirculo(p)) { quemar("Te saliste del círculo. Ese cable se quemó."); return; }
+      if (chocaConTrazos(last, p)) { quemar("Cruzaste otro cable. Se quemó."); return; }
+      if (chocaConsigo(last, p, activo.pts)) { quemar("El cable se cruzó consigo mismo."); return; }
+      if (pisaUnPunto(last, p, [activo.desde, activo.hasta])) { quemar("Pasaste por encima de otro punto."); return; }
+
+      activo.pts.push(p);
+      dibujar();
+    });
+
+    function soltar(e) {
+      if (!activo) return;
+      if (e) e.preventDefault();
+      var meta = puntos[activo.hasta];
+      var last = activo.pts[activo.pts.length - 1];
+      if (Math.hypot(last.x - meta.x, last.y - meta.y) < DOT * 1.35 && activo.pts.length > 2) {
+        activo.pts.push({ x: meta.x, y: meta.y });
+        trazos.push(activo);
+        activo = null;
+        sLink();
+        $("unidos").textContent = String(unidos());
+        var faltan = NIVELES[nivel].pares.length - unidos();
+        $("say").textContent = faltan ? (faltan === 1 ? "Queda uno." : "Quedan " + faltan + ".") : "Circuito cerrado.";
+        dibujar();
+        if (!faltan) terminarNivel();
+      } else {
+        activo = null;
+        sMiss();
+        $("say").textContent = "Suelta justo encima del punto del mismo color.";
+        dibujar();
+      }
+    }
+
+    canvas.addEventListener("pointerup", soltar);
+    canvas.addEventListener("pointercancel", soltar);
+
+    function terminarNivel() {
+      listo = true;
+      sClunk();
+      if (nivel < NIVELES.length - 1) {
+        setTimeout(function () {
+          nivel++;
+          listo = false;
+          $("ovTitle").textContent = NIVELES[nivel].titulo;
+          $("ovText").textContent = NIVELES[nivel].texto;
+          $("ovBtn").textContent = "Seguir";
+          $("overlay").hidden = false;
+          cargar();
+        }, 700);
+      } else {
+        setTimeout(function () { onDone(quemados); }, 700);
+      }
+    }
+
+    $("deshacer").addEventListener("click", function () {
+      if (listo) return;
+      if (!trazos.length) return;
+      trazos.pop();
+      activo = null;
+      $("unidos").textContent = String(unidos());
+      $("say").textContent = "Cable retirado.";
+      sTick();
+      dibujar();
+    });
+
+    $("reiniciar").addEventListener("click", function () {
+      if (listo) return;
+      cargar();
+      $("say").textContent = "Nivel limpio otra vez.";
+      sTick();
+    });
+
+    $("ovBtn").addEventListener("click", function () {
+      $("overlay").hidden = true;
+      sTick();
+    });
+
+    window.addEventListener("resize", resize);
+
+    cargar();
+    resize();
+  }
+
+  /* ---------- acto 2: el acertijo ---------- */
+
+  var ACERTIJOS = [
+    {
+      q: "Soy el desierto más árido del planeta y me estiro por todo el norte de Chile. ¿Cómo me llamo?",
+      largo: "una palabra",
+      ejemplo: "Patagonia",
+      ok: ["atacama", "desierto de atacama", "el desierto de atacama"]
+    },
+    {
+      q: "Bajo de norte a sur por el lado oriente, hago de muralla con Argentina y de mí bajan casi todos los ríos. ¿Qué soy?",
+      largo: "dos palabras",
+      ejemplo: "Los Lagos",
+      ok: ["los andes", "andes", "cordillera de los andes", "la cordillera de los andes", "cordillera"]
+    },
+    {
+      q: "Vivo en medio del Pacífico, a miles de kilómetros de la costa, y me cuidan gigantes de piedra. ¿Quién soy?",
+      largo: "dos palabras",
+      ejemplo: "Rapa Nui",
+      ok: ["rapa nui", "isla de pascua", "pascua", "rapanui"]
+    },
+    {
+      q: "Mojo los más de seis mil kilómetros de costa chilena y soy el océano más grande que existe. ¿Cuál soy?",
+      largo: "una palabra",
+      ejemplo: "Atlántico",
+      ok: ["pacifico", "oceano pacifico", "el pacifico"]
+    },
+    {
+      q: "Soy un archipiélago del sur, con casas paradas sobre pilotes en el agua e iglesias de madera. ¿Cómo me llamo?",
+      largo: "una palabra",
+      ejemplo: "Aysén",
+      ok: ["chiloe", "isla de chiloe", "archipielago de chiloe", "isla grande de chiloe"]
+    },
+    {
+      q: "Soy la ciudad grande más al sur de Chile y miro el estrecho que cruzó Magallanes. ¿Qué ciudad soy?",
+      largo: "dos palabras",
+      ejemplo: "Puerto Montt",
+      ok: ["punta arenas"]
+    }
+  ];
+
+  function normalizar(s) {
+    return s.toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\s]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function rango(n) {
+    if (n <= 1) return "a la primera";
+    if (n <= 2) return "buena memoria";
+    if (n <= 4) return "le costó un poco";
+    if (n <= 7) return "a punta de insistencia";
+    return "casi se la regalo";
+  }
+
+  function setupAcertijo(seed, quemados) {
+    var idx = hashOf("acertijo:" + seed) % ACERTIJOS.length;
+    var A = ACERTIJOS[idx];
+    var intentos = 0;
+
+    $("acertijo").textContent = A.q;
+    $("pista").innerHTML = "Pista de formato: la respuesta es <b>" + A.largo +
+      "</b>. Se escribe así, por ejemplo: <b>" + A.ejemplo + "</b>.";
+
+    function open() {
+      sBoom();
+      $("scoreQ").textContent = String(quemados);
+      $("scoreN").textContent = String(intentos);
+      $("scoreR").textContent = rango(intentos);
+      $("door").classList.add("open");
+      $("paper").classList.add("shown");
+      setTimeout(function () { $("door").style.pointerEvents = "none"; }, 1200);
+    }
+
+    function capitalizar(r) {
+      return r.replace(/(^|\s)([a-z])/g, function (m, sp, c) { return sp + c.toUpperCase(); });
+    }
+
+    function ayuda() {
+      var real = A.ok[0];
+      if (intentos === 3) return " Parte con la letra «" + real.charAt(0).toUpperCase() + "».";
+      if (intentos === 5) return " Empieza así: «" + real.slice(0, 3) + "…».";
+      if (intentos >= 8) return " Ya está, te la regalo: " + capitalizar(real) + ".";
+      return "";
+    }
+
+    function responder() {
+      var dado = normalizar($("respuesta").value);
+      if (!dado) { $("respuesta").focus(); return; }
+      intentos++;
+
+      if (A.ok.indexOf(dado) >= 0) {
+        $("veredicto").textContent = "Correcto. La bóveda cede.";
+        $("veredicto").className = "verdict-msg good";
+        $("responder").disabled = true;
+        $("respuesta").disabled = true;
+        sClunk();
+        setTimeout(open, 620);
+        return;
+      }
+
+      $("veredicto").textContent = "No es esa." + ayuda();
+      $("veredicto").className = "verdict-msg bad";
+      sMiss();
+      var d = $("door");
+      d.classList.remove("shake");
+      void d.offsetWidth;
+      d.classList.add("shake");
+      $("respuesta").select();
+    }
+
+    $("responder").addEventListener("click", responder);
+    $("respuesta").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); responder(); }
+    });
+    $("respuesta").focus();
+  }
+
+  /* ---------- orquestación ---------- */
+
+  function setupGame(data) {
+    $("crear").hidden = true;
+    $("juego").hidden = false;
+
+    var nombre = (data.n || "").trim();
+    $("destino").textContent = nombre || "sin nombre";
+    $("paperName").textContent = nombre || "quien haya abierto esto";
+    $("mensaje").textContent = data.m || "";
+
+    var seed = JSON.stringify(data);
+
+    setupCircuito(function (quemados) {
+      $("acto1").hidden = true;
+      $("acto2").hidden = false;
+      $("acto2").classList.add("act");
+      $("acto").textContent = "Acto dos · Acertijo";
+      setupAcertijo(seed, quemados);
+    });
+  }
+
+  function start() {
+    var raw = location.hash.replace(/^#/, "");
+    if (!raw) { setupCreator(); return; }
+    decode(raw).then(function (data) {
+      if (!data || typeof data.m !== "string" || !data.m) throw new Error("payload");
+      setupGame(data);
+    }).catch(function (e) {
+      setupCreator();
+      if (e && e.message === "sin-descompresion") {
+        $("crear").querySelector(".lede").textContent =
+          "Este navegador es muy antiguo para abrir el mensaje. Ábrelo en Chrome, Safari o Firefox actualizado.";
+      }
+    });
+  }
+
+  start();
+  window.addEventListener("hashchange", function () { location.reload(); });
+})();
+</script>
+</body>
+</html>
